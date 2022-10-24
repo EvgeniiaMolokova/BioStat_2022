@@ -2,7 +2,7 @@
 title: "HW1"
 author: "Evgeniia Molokova"
 date: "2022-10-24"
-output: html_document
+output: rmarkdown::github_document
 ---
 
 #Настройка R и библиотек dplyr, ggplot2, ggpubr
