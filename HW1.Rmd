@@ -5,7 +5,7 @@ date: "2022-10-24"
 output: rmarkdown::github_document
 ---
 
-#Настройка R и библиотек dplyr, ggplot2, ggpubr
+# Настройка R и библиотек dplyr, ggplot2, ggpubr
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
 library (dplyr)
@@ -21,7 +21,7 @@ library(tidyverse)
 
 &nbsp;
 
-#1. Загружаем данные по страховым суммам ("Insurance cost")
+# 1. Загружаем данные по страховым суммам ("Insurance cost")
 ```{r}
 data_HW <-read.csv("C:/Users/Евгения/Downloads/insurance_cost.csv", stringsAsFactors = TRUE)
 ```
@@ -32,7 +32,7 @@ data_HW <-read.csv("C:/Users/Евгения/Downloads/insurance_cost.csv", strin
 
 &nbsp;
 
-#2. Гистограммы нумерических переменных (ИМТ, страховая сумма)
+# 2. Гистограммы нумерических переменных (ИМТ, страховая сумма)
 ```{r}
 ggplot()+
   geom_histogram(data = data_HW, aes (x=bmi), bins = 20, fill = '#99FFFF', color = 'black', alpha = 0.5)+
@@ -55,7 +55,7 @@ ggplot()+
 
 &nbsp;
 
-#3. График плотности распределения переменной Charges/Страховая сумма
+# 3. График плотности распределения переменной Charges/Страховая сумма
 ```{r}
 charges_mean <- round(mean(data_HW$charges),1)
 charges_median <- round(median(data_HW$charges),1)
@@ -78,7 +78,7 @@ ggplot()+
 
 &nbsp;
 
-#4. Графики box-plot по отношению переменных "страховая сумма" и "пол", "статус курения", "регион"
+# 4. Графики box-plot по отношению переменных "страховая сумма" и "пол", "статус курения", "регион"
 ```{r}
 ggplot()+
   geom_boxplot(data = data_HW, aes(x=charges, y= sex),fill = '#E5FFCC', alpha = 0.5)+
@@ -108,7 +108,7 @@ theme_bw()+
 
 &nbsp;
 
-#5. Объединение графиков
+# 5. Объединение графиков
 ```{r}
 charges <- ggplot()+
   geom_density(data = data_HW, aes (x=charges), fill = '#E5CCFF', color = '#E5CCFF', alpha=0.5)+
@@ -155,7 +155,7 @@ common_plot
 
 &nbsp;
 
-#6. Фасет графика плотности распределения страховой суммы по переменной "Регион" 
+# 6. Фасет графика плотности распределения страховой суммы по переменной "Регион" 
 ```{r}
 charges_mean <- round(mean(data_HW$charges),1)
 charges_median <- round(median(data_HW$charges),1)
@@ -185,7 +185,7 @@ ggplot()+
 
 &nbsp;
 
-#7. График отношения переменных "возраст" и "страховая сумма"
+# 7. График отношения переменных "возраст" и "страховая сумма"
 ```{r}
 ggplot(data=data_HW, aes(x=age, y= charges))+
   geom_point(size =0.5)+
@@ -202,7 +202,7 @@ ggplot(data=data_HW, aes(x=age, y= charges))+
 
 &nbsp;
 
-#8. Линия тренда
+# 8. Линия тренда
 ```{r}
 ggplot(data=data_HW, aes(x=age, y= charges))+
   geom_point(size =0.5)+
@@ -220,7 +220,7 @@ ggplot(data=data_HW, aes(x=age, y= charges))+
 
 &nbsp;
 
-#9. Разбивка графика по статусу курения
+# 9. Разбивка графика по статусу курения
 ```{r}
 ggplot(data=data_HW, aes(x=age, y= charges, color = smoker, group = smoker))+
   geom_point(size =0.5)+
@@ -239,7 +239,7 @@ ggplot(data=data_HW, aes(x=age, y= charges, color = smoker, group = smoker))+
 
 &nbsp;
 
-#10. Отношение переменных ИМТ и страховая сумма
+# 10. Отношение переменных ИМТ и страховая сумма
 ```{r}
 ggplot(data=data_HW, aes(x=bmi, y= charges, color = smoker, group = smoker))+
   geom_point(size =0.5, alpha = 0.4)+
@@ -258,7 +258,7 @@ ggplot(data=data_HW, aes(x=bmi, y= charges, color = smoker, group = smoker))+
 
 &nbsp;
 
-#11. Вопрос №1: Значимы ли различия по ИМТ между группами курильщиков и некурильщиков среди женщин?
+# 11. Вопрос №1: Значимы ли различия по ИМТ между группами курильщиков и некурильщиков среди женщин?
 ```{r}
 data_HW %>%
   filter(sex == "female") %>% 
@@ -273,7 +273,7 @@ ggplot()+
 &nbsp;
 
 
-##Ответ на Вопрос №1:
+## Ответ на Вопрос №1:
 График типа "ящик с усами" дает визуальное представление о разнице средних и размахе значений переменной "ИМТ" в двух подгруппах, так что в нашем случае мы можем предположить, что различия по данному показателю будут не значимы (среднее значение в одной подгруппе в пределах IQR другой подгруппы).
 
 
@@ -282,7 +282,7 @@ ggplot()+
 
 &nbsp;
 
-#12. Вопрос №2: В каких возрастных группах наименьшее число мужчин-курильщикови и наибольшее число мужчин-некурильщиков?
+# 12. Вопрос №2: В каких возрастных группах наименьшее число мужчин-курильщикови и наибольшее число мужчин-некурильщиков?
 ```{r}
 
 data_HW <- data_HW %>%
@@ -315,7 +315,7 @@ data_HW <- data_HW %>%
 
 &nbsp;
 
-#13. Вопрос №3: Как соотносятся ИМТ и страховые суммы среди женщин?
+# 13. Вопрос №3: Как соотносятся ИМТ и страховые суммы среди женщин?
 ```{r}
   ggplot(data=data_HW[data_HW$sex == "female", ], aes (x=bmi, y=charges))+
   geom_point(color = '#C71585', alpha = 0.6)+
@@ -338,7 +338,7 @@ data_HW <- data_HW %>%
 
 &nbsp;
 
-#14. Повторить график
+# 14. Повторить график
 ```{r}
 data_HW <- data_HW %>%
   mutate (
