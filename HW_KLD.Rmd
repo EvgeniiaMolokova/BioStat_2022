@@ -1,0 +1,79 @@
+---
+title: "HW_KLD"
+author: "Evgeniia Molokova"
+date: "2022-11-03"
+output: rmarkdown::github_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+
+library(dplyr)
+library(tidyr)
+library(ggplot2)
+library(pROC)
+library(gtsummary)
+
+```
+
+# Загрузка базы данных и преобразование переменных
+```{r}
+diabetes_data <- read.csv("C:/Users/Евгения/Downloads/diabetes.csv")
+diabetes_data <- diabetes_data %>% mutate_at(c(2:8), ~na_if(., 0))
+diabetes_data <- diabetes_data %>% mutate(across(Outcome, ~ as.factor(.x)))
+diabetes_data %>% glimpse()
+```
+
+# 1. Количество пациентов с НТГ (>= 140.4 мг/дл) и без НТГ (< 140.4 мг/дл) 
+```{r}
+summary(diabetes_data$Glucose >= 140.4)
+```
+
+FALSE = количество пациентов без НТГ, TRUE = количество пациентов с НТГ, NA = пропущенные значения в базе данных 
+
+# 2. ROC-кривая для предсказания сахарного диабета по уровню гликемии
+```{r}
+roc_curve_1 <- roc(Outcome ~ Glucose, data = diabetes_data, na.rm = T)
+ggroc(roc_curve_1) + 
+    theme_bw()
+```
+
+# 3. Площадь по ROC-кривой (AUC)
+```{r}
+roc_curve_1$auc
+```
+
+Площидь под ROC-кривой равна 0.7928
+
+# 4. 95% Доверительный интервал
+```{r}
+roc_curve_1 <- roc(Outcome ~ Glucose, data = diabetes_data, ci = T, na.rm = T)
+roc_curve_1$ci
+```
+
+95% Доверительный интервал/CI = 0.7599-0.8257
+
+# 5. ROC-кривая для предсказания сахарного диабета по уровню инсулина
+```{r}
+roc_curve_2 <- roc(Outcome ~ Insulin, data = diabetes_data, ci = T, direction = "<", na.rm = T)
+ggroc(roc_curve_2) + 
+    theme_bw()
+roc_curve_2
+roc_curve_2 %>% coords(x = "best", best.method = "closest.topleft")
+```
+
+Оптимальное пороговое значение для предсказания сахарного диабета по уровню инсулина - 121 мЕ/мл с чувствительностью 78.5% и специфичностью 62.1%
+
+# 6. Анализ предсказательной способности всех количественных переменных в базе данных
+```{r}
+diabetes_data %>% 
+    pivot_longer(cols = !Outcome) %>% 
+    group_by(name) %>% 
+    summarise(AUC = roc(Outcome, value, ci = T, na.rm = T)$ci[2] %>% round(3),
+              AUC_LCL = roc(Outcome, value, ci = T, na.rm = T)$ci[1] %>% round(3),
+              AUC_UCL = roc(Outcome, value, ci = T, na.rm = T)$ci[3] %>% round(3))
+```
+
+Наибольшая площадь под кривой у переменной Glucose, наименьшая у DiabetesPedigreeFunction (индекс, отражающий вероятность наличия диабета на основании наследственного анамнеза). 
+Наибольшую предсказательную способность демонстрирует показатель Glucose (уровень глюкозы на 120 минуте орального глюкозотолерантного
+теста), повышение которого диагностируется при НТГ. НТГ можно рассматривать как преддиабетическое состояние, связанное с высоким риском развития СД.
