@@ -1,0 +1,508 @@
+---
+title: "HW_Auto_Data"
+author: "Evgeniia Molokova"
+date: "2022-11-09"
+output: word_document
+---
+
+# Настройка Rmd и библиотек
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+
+library (tidyverse)
+library (readxl)
+library (tibble)
+library (tidyr)
+library (flextable)
+```
+
+
+&nbsp;
+
+
+&nbsp;
+
+# Загрузка базы данных и преобразование переменных
+```{r}
+df <- read_xlsx("C:/Users/Евгения/Downloads/data_excel.xlsx")
+df <- as_tibble(df)
+df <- df %>%
+  mutate(`Группа крови` = `Группа крови` %>% na_if ("NA")) #Преобразование "NA" в NA - пропущенные значения
+
+df <- df %>%
+  mutate (across (!c(`Группа`, `Возраст`, `Пол`, `Рост`, `Группа крови`), function(x) gsub(",", ".", x))) %>%
+  mutate (across (!c(`Группа`, `Возраст`, `Пол`, `Рост`, `Группа крови`), function(x) as.numeric(x))) #Преобразование в количественные переменные
+
+df %>% View()
+```
+
+
+&nbsp;
+
+
+&nbsp;
+
+# Подготовка к расчету статистик
+```{r}
+statistics <- list(
+      `_Количество субъектов` = ~length(.x) %>% as.character(),
+      `_Количество (есть данные)` = ~sum(!is.na(.x)) %>% as.character(),
+      `_Нет данных` = ~sum(is.na(.x)) %>% as.character(),
+      `_Ср. знач.` = ~ifelse(sum(!is.na(.x)) == 0, "Н/П*", mean(.x, na.rm = TRUE) %>% round(2) %>% as.character()),
+      `_Станд. отклон.` = ~ifelse(sum(!is.na(.x)) < 3, "Н/П*", sd(.x, na.rm = TRUE) %>% round(2) %>% as.character()),
+      `_95% ДИ для среднего` = ~sd(.x, na.rm = TRUE) %>% round(2) %>% as.character(),
+      `_мин. - макс.` = ~ifelse(sum(!is.na(.x)) == 0, "Н/П*", paste0(min(.x, na.rm = TRUE) %>% round(2), " - ", max(.x, na.rm = TRUE) %>% round(2))),
+      `_Медиана` = ~ifelse(sum(!is.na(.x)) == 0, "Н/П*", median(.x, na.rm = TRUE) %>% round(2) %>% as.character()),
+      `_Q1 - Q3` = ~ifelse(sum(!is.na(.x)) == 0, "Н/П*", paste0(quantile(.x, 0.25, na.rm = TRUE) %>% round(2), " - ", quantile(.x, 0.75, na.rm = TRUE) %>% round(2)))
+)
+```
+
+
+&nbsp;
+
+
+&nbsp;
+
+# Таблица описательных статистик переменной "Возраст"
+```{r}
+df %>%
+  select(`Группа`, `Возраст`) %>%
+  group_by(`Группа`) %>%
+  summarise(across(`Возраст`, statistics)) %>%
+  pivot_longer(!`Группа`) %>%
+  separate(name, into = c("Переменная", "Статистика"), sep="__") %>%
+  rename(`Значение`=value)%>%
+  flextable() %>%
+  theme_box() %>%
+  merge_v(c("Группа","Переменная"))
+```
+
+
+&nbsp;
+
+
+&nbsp;
+
+# Таблица описательных статистик переменной "Рост"
+```{r}
+df %>%
+  select(`Группа`, `Рост`) %>%
+  group_by(`Группа`) %>%
+  summarise(across(`Рост`, statistics)) %>%
+  pivot_longer(!`Группа`) %>%
+  separate(name, into = c("Переменная", "Статистика"), sep="__") %>%
+  rename(`Значение`=value)%>%
+  flextable() %>%
+  theme_box() %>%
+  merge_v(c("Группа","Переменная"))
+```
+
+
+&nbsp;
+
+
+&nbsp;
+
+# Таблица описательных статистик переменной "Базофилы_Е1"
+```{r}
+df %>%
+  select(`Группа`, `Базофилы_E1`) %>%
+  group_by(`Группа`) %>%
+  summarise(across(`Базофилы_E1`, statistics)) %>%
+  pivot_longer(!`Группа`) %>%
+  separate(name, into = c("Переменная", "Статистика"), sep = "__") %>%
+  rename(`Значение`= value)%>%
+  flextable() %>%
+  theme_box() %>%
+  merge_v(c("Группа","Переменная"))
+```
+
+
+&nbsp;
+
+
+&nbsp;
+
+
+# Таблица описательных статистик переменной "Эозинофилы_Е1"
+```{r}
+df %>%
+  select(`Группа`, `Эозинофилы_E1`) %>%
+  group_by(`Группа`) %>%
+  summarise(across(`Эозинофилы_E1`, statistics)) %>%
+  pivot_longer(!`Группа`) %>%
+  separate(name, into = c("Переменная", "Статистика"), sep="__") %>%
+  rename(`Значение`= value)%>%
+  flextable() %>%
+  theme_box() %>%
+  merge_v(c("Группа","Переменная"))
+```
+
+
+&nbsp;
+
+
+&nbsp;
+
+
+# Таблица описательных статистик переменной "Гемоглобин_Е1"
+```{r}
+df %>%
+  select(`Группа`, `Гемоглобин_E1`) %>%
+  group_by(`Группа`) %>%
+  summarise(across(`Гемоглобин_E1`, statistics)) %>%
+  pivot_longer(!`Группа`) %>%
+  separate(name, into = c("Переменная", "Статистика"), sep="__") %>%
+  rename(`Значение`= value)%>%
+  flextable() %>%
+  theme_box() %>%
+  merge_v(c("Группа","Переменная"))
+```
+
+
+&nbsp;
+
+
+&nbsp;
+
+
+# Таблица описательных статистик переменной "Эритроциты_Е1"
+```{r}
+df %>%
+  select(`Группа`, `Эритроциты_E1`) %>%
+  group_by(`Группа`) %>%
+  summarise(across(`Эритроциты_E1`, statistics)) %>%
+  pivot_longer(!`Группа`) %>%
+  separate(name, into = c("Переменная", "Статистика"), sep="__") %>%
+  rename(`Значение`= value)%>%
+  flextable() %>%
+  theme_box() %>%
+  merge_v(c("Группа","Переменная"))
+```
+
+
+&nbsp;
+
+
+&nbsp;
+
+
+# Таблица описательных статистик переменной "Базофилы_Е2"
+```{r}
+df %>%
+  select(`Группа`, `Базофилы_E2`) %>%
+  group_by(`Группа`) %>%
+  summarise(across(`Базофилы_E2`, statistics)) %>%
+  pivot_longer(!`Группа`) %>%
+  separate(name, into = c("Переменная", "Статистика"), sep="__") %>%
+  rename(`Значение`= value)%>%
+  flextable() %>%
+  theme_box() %>%
+  merge_v(c("Группа","Переменная"))
+```
+
+
+&nbsp;
+
+
+&nbsp;
+
+# Таблица описательных статистик переменной "Эозинофилы_Е2"
+```{r}
+df %>%
+  select(`Группа`, `Эозинофилы_E2`) %>%
+  group_by(`Группа`) %>%
+  summarise(across(`Эозинофилы_E2`, statistics)) %>%
+  pivot_longer(!`Группа`) %>%
+  separate(name, into = c("Переменная", "Статистика"), sep="__") %>%
+  rename(`Значение`= value)%>%
+  flextable() %>%
+  theme_box() %>%
+  merge_v(c("Группа","Переменная"))
+```
+
+
+&nbsp;
+
+
+&nbsp;
+
+# Таблица описательных статистик переменной "Гемоглобин_Е2"
+```{r}
+df %>%
+  select(`Группа`, `Гемоглобин_E2`) %>%
+  group_by(`Группа`) %>%
+  summarise(across(`Гемоглобин_E2`, statistics)) %>%
+  pivot_longer(!`Группа`) %>%
+  separate(name, into = c("Переменная", "Статистика"), sep="__") %>%
+  rename(`Значение`= value)%>%
+  flextable() %>%
+  theme_box() %>%
+  merge_v(c("Группа","Переменная"))
+```
+
+
+&nbsp;
+
+
+&nbsp;
+
+# Таблица описательных статистик переменной "Эритроциты_Е2"
+```{r}
+df %>%
+  select(`Группа`, `Эритроциты_E2`) %>%
+  group_by(`Группа`) %>%
+  summarise(across(`Эритроциты_E2`, statistics)) %>%
+  pivot_longer(!`Группа`) %>%
+  separate(name, into = c("Переменная", "Статистика"), sep="__") %>%
+  rename(`Значение`= value)%>%
+  flextable() %>%
+  theme_box() %>%
+  merge_v(c("Группа","Переменная"))
+```
+
+&nbsp;
+
+
+&nbsp;
+
+# Таблица описательных статистик переменной "Пол"
+```{r}
+df %>%
+  select (`Группа`,`Пол`) %>%
+  mutate (`Пол` =`Пол`%>% as.factor()) %>%
+  count (`Группа`,`Пол`) %>%
+  group_by(`Группа`)%>%
+  mutate(`Процент по группе` = (n/sum(n)) %>% round(4) %>% `*` (100) %>% str_c("%")) %>%
+  ungroup()%>%
+  mutate(`Процент по выборке` = (n/sum(n)) %>% round(4) %>% `*` (100) %>% str_c("%")) %>%
+  flextable() %>%
+  theme_box()
+```
+
+&nbsp;
+
+
+&nbsp;
+
+# Таблица описательных статистик переменной "Группа крови"
+```{r}
+df %>%
+  select (`Группа`,`Группа крови`) %>%
+  mutate (`Группа крови` =`Группа крови`%>% replace_na("Нет данных") %>% as.factor()) %>%
+  count (`Группа`,`Группа крови`) %>%
+  group_by(`Группа`)%>%
+  mutate(`Процент по группе` = (n/sum(n)) %>% round(4) %>% `*` (100) %>% str_c("%")) %>%
+  ungroup()%>%
+  mutate(`Процент по выборке` = (n/sum(n)) %>% round(4) %>% `*` (100) %>% str_c("%")) %>%
+  flextable() %>%
+  theme_box()
+```
+
+&nbsp;
+
+
+&nbsp;
+
+# Сравнение групп по возрасту
+```{r}
+statistica <- list(
+      `_Ср. знач.` = ~ifelse(sum(!is.na(.x)) == 0, "Н/П*", mean(.x, na.rm = TRUE) %>% round(2) %>% as.character()),
+      `_Станд. отклон.` = ~ifelse(sum(!is.na(.x)) < 3, "Н/П*", sd(.x, na.rm = TRUE) %>% round(2) %>% as.character()),
+      `_95% ДИ для среднего` = ~sd(.x, na.rm = TRUE) %>% round(2) %>% as.character())
+
+
+df %>%
+  select(`Группа`, `Возраст`) %>%
+  group_by(`Группа`) %>%
+  summarise(across(`Возраст`, statistica)) %>%
+  pivot_longer(!`Группа`) %>%
+  separate(name, into = c("Переменная", "Статистика"), sep="__") %>%
+  rename(`Значение`= value)%>%
+  add_column(`p.value` = t.test(`Возраст`~`Группа`, data = df)$p.value)%>%
+  flextable() %>%
+  theme_box() %>%
+  merge_v(c("Группа","Переменная","p.value"))
+```
+
+&nbsp;
+
+
+&nbsp;
+
+# Сравнение групп по росту
+```{r}
+df %>%
+  select(`Группа`, `Рост`) %>%
+  group_by(`Группа`) %>%
+  summarise(across(`Рост`, statistica)) %>%
+  pivot_longer(!`Группа`) %>%
+  separate(name, into = c("Переменная", "Статистика"), sep="__") %>%
+  rename(`Значение`= value)%>%
+  add_column(`p.value` = t.test(`Рост`~`Группа`, data = df)$p.value)%>%
+  flextable() %>%
+  theme_box() %>%
+  merge_v(c("Группа","Переменная","p.value"))
+```
+
+&nbsp;
+
+
+&nbsp;
+
+# Сравнение групп по Базофилы_Е1
+```{r}
+df %>%
+  select(`Группа`, `Базофилы_E1`) %>%
+  group_by(`Группа`) %>%
+  summarise(across(`Базофилы_E1`, statistica)) %>%
+  pivot_longer(!`Группа`) %>%
+  separate(name, into = c("Переменная", "Статистика"), sep="__") %>%
+  rename(`Значение`= value)%>%
+  add_column(`p.value` = t.test(`Базофилы_E1`~`Группа`, data = df)$p.value)%>%
+  flextable() %>%
+  theme_box() %>%
+  merge_v(c("Группа","Переменная","p.value"))
+```
+
+
+&nbsp;
+
+
+&nbsp;
+
+# Сравнение групп по Эозинофилы_Е1
+```{r}
+df %>%
+  select(`Группа`, `Эозинофилы_E1`) %>%
+  group_by(`Группа`) %>%
+  summarise(across(`Эозинофилы_E1`, statistica)) %>%
+  pivot_longer(!`Группа`) %>%
+  separate(name, into = c("Переменная", "Статистика"), sep="__") %>%
+  rename(`Значение`= value)%>%
+  add_column(`p.value` = t.test(`Эозинофилы_E1`~`Группа`, data = df)$p.value)%>%
+  flextable() %>%
+  theme_box() %>%
+  merge_v(c("Группа","Переменная","p.value"))
+```
+
+&nbsp;
+
+
+&nbsp;
+
+# Сравнение групп по Гемоглобин_Е1
+```{r}
+df %>%
+  select(`Группа`, `Гемоглобин_E1`) %>%
+  group_by(`Группа`) %>%
+  summarise(across(`Гемоглобин_E1`, statistica)) %>%
+  pivot_longer(!`Группа`) %>%
+  separate(name, into = c("Переменная", "Статистика"), sep="__") %>%
+  rename(`Значение`= value)%>%
+  add_column(`p.value` = t.test(`Гемоглобин_E1`~`Группа`, data = df)$p.value)%>%
+  flextable() %>%
+  theme_box() %>%
+  merge_v(c("Группа","Переменная","p.value"))
+```
+
+&nbsp;
+
+
+&nbsp;
+
+# Сравнение групп по Эритроциты_Е1
+```{r}
+df %>%
+  select(`Группа`, `Эритроциты_E1`) %>%
+  group_by(`Группа`) %>%
+  summarise(across(`Эритроциты_E1`, statistica)) %>%
+  pivot_longer(!`Группа`) %>%
+  separate(name, into = c("Переменная", "Статистика"), sep="__") %>%
+  rename(`Значение`= value)%>%
+  add_column(`p.value` = t.test(`Эритроциты_E1`~`Группа`, data = df)$p.value)%>%
+  flextable() %>%
+  theme_box() %>%
+  merge_v(c("Группа","Переменная","p.value"))
+```
+
+&nbsp;
+
+
+&nbsp;
+
+# Сравнение групп по Базофилы_Е2
+```{r}
+df %>%
+  select(`Группа`, `Базофилы_E2`) %>%
+  group_by(`Группа`) %>%
+  summarise(across(`Базофилы_E2`, statistica)) %>%
+  pivot_longer(!`Группа`) %>%
+  separate(name, into = c("Переменная", "Статистика"), sep="__") %>%
+  rename(`Значение`= value)%>%
+  add_column(`p.value` = t.test(`Базофилы_E2`~`Группа`, data = df)$p.value)%>%
+  flextable() %>%
+  theme_box() %>%
+  merge_v(c("Группа","Переменная","p.value"))
+```
+
+&nbsp;
+
+
+&nbsp;
+
+# Сравнение групп по  Эозинофилы_Е2
+```{r}
+df %>%
+  select(`Группа`, `Эозинофилы_E2`) %>%
+  group_by(`Группа`) %>%
+  summarise(across(`Эозинофилы_E2`, statistica)) %>%
+  pivot_longer(!`Группа`) %>%
+  separate(name, into = c("Переменная", "Статистика"), sep="__") %>%
+  rename(`Значение`= value)%>%
+  add_column(`p.value` = t.test(`Эозинофилы_E2`~`Группа`, data = df)$p.value)%>%
+  flextable() %>%
+  theme_box() %>%
+  merge_v(c("Группа","Переменная","p.value"))
+```
+
+&nbsp;
+
+
+&nbsp;
+
+# Сравнение групп по Гемоглобин_Е2
+```{r}
+df %>%
+  select(`Группа`, `Гемоглобин_E2`) %>%
+  group_by(`Группа`) %>%
+  summarise(across(`Гемоглобин_E2`, statistica)) %>%
+  pivot_longer(!`Группа`) %>%
+  separate(name, into = c("Переменная", "Статистика"), sep="__") %>%
+  rename(`Значение`= value)%>%
+  add_column(`p.value` = t.test(`Гемоглобин_E2`~`Группа`, data = df)$p.value)%>%
+  flextable() %>%
+  theme_box() %>%
+  merge_v(c("Группа","Переменная","p.value"))
+```
+
+&nbsp;
+
+
+&nbsp;
+
+
+# Сравнение групп по Эритроциты_Е2
+```{r}
+df %>%
+  select(`Группа`, `Эритроциты_E2`) %>%
+  group_by(`Группа`) %>%
+  summarise(across(`Эритроциты_E2`, statistica)) %>%
+  pivot_longer(!`Группа`) %>%
+  separate(name, into = c("Переменная", "Статистика"), sep="__") %>%
+  rename(`Значение`= value)%>%
+  add_column(`p.value` = t.test(`Эритроциты_E2`~`Группа`, data = df)$p.value)%>%
+  flextable() %>%
+  theme_box() %>%
+  merge_v(c("Группа","Переменная","p.value"))
+```
